@@ -7,8 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,6 +24,64 @@ public class BasicItemController {
         model.addAttribute("items", items);
         return "basic/items";
     }
+
+    @GetMapping("/{itemId}")
+    public String item(@PathVariable long itemId, Model model) {
+        Item item = itemRepository.findById(itemId);
+        model.addAttribute("item",item);
+        return "basic/item";
+    }
+
+    @GetMapping("/add")
+    public String addForm() {
+        return "basic/addForm";
+    }
+
+    //@PostMapping("/add")
+    public String save(@RequestParam String itemName,
+                       @RequestParam int price,
+                       @RequestParam int quantity,
+                       Model model) {
+        Item item = new Item();
+        item.setItemName(itemName);
+        item.setPrice(price);
+        item.setQuantity(quantity);
+
+        itemRepository.save(item);
+        model.addAttribute("item", item);
+
+        return "basic/item";
+    }
+
+    //@PostMapping("/add")
+    public String saveV1(@ModelAttribute Item item, Model model) {
+
+        itemRepository.save(item);
+        model.addAttribute("item", item);
+        return "basic/item";
+    }
+
+    //@PostMapping("/add")
+    public String saveV2(@ModelAttribute("item") Item item) {
+
+        itemRepository.save(item);
+        return "basic/item";
+    }
+
+    @PostMapping("/add")
+    public String saveV3(@ModelAttribute Item item) {
+
+        itemRepository.save(item);
+        return "basic/item";
+    }
+
+    //@PostMapping("/add")
+    public String saveV4(Item item) {
+
+        itemRepository.save(item);
+        return "basic/item";
+    }
+
 
     @PostConstruct
     public void init() {
