@@ -172,7 +172,7 @@ public class ValidationItemController {
         return "redirect:/validation/items/{itemId}";
     }
 
-    @PostMapping("/add")
+    //@PostMapping("/add")
     public String saveV5(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
         if (!StringUtils.hasText(item.getItemName())) {
@@ -215,6 +215,52 @@ public class ValidationItemController {
             if (resultPrice < 10000) {
                 // ! 툭정 필드가 아니라 이렇게 글로벌한 에러인 경우 ObjectError로 담으면 된다.
                 bindingResult.addError(new ObjectError("item", new String[]{"totalPriceMin"}, new Object[]{10000, resultPrice}, null));
+            }
+        }
+        // 검증에 실패하면 다시 입력 폼으로
+        if (bindingResult.hasErrors()) {
+            log.info("errors ={}", bindingResult);
+            return "validation/addForm";
+        }
+
+        Item savedItem = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        // {}로 데이터를 넣은게 아니라면 queryParameter로 나머지 attribute가 들어간다.
+        // ex) localhost:8080/validation/items/3?status=true
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/validation/items/{itemId}";
+    }
+
+    @PostMapping("/add")
+    public String saveV6(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+
+        // ! BindingResult는, 자기보다 바로 앞에 어떤 녀석을 검증할건지를 반드시 강제하기 때문에 사실 BindingResult는 이미 본인이 누굴 검증할지 알고 있는 상태다.
+        // ! 그래서 objectName 이런걸 넣을 필요가 없고 아래처럼 깔끔하게 줄일 수 있다.
+        // ! 근데 errorCode를 앞부분만 딱 입력했는데 어떻게 저 메시지를 가져올 수 있는가 ? 이건 MessageCodesResolver에 연관이 있다.
+        if (!StringUtils.hasText(item.getItemName())) {
+            bindingResult.rejectValue("itemName", "required");
+//            bindingResult.addError(
+//                    new FieldError(
+//                            "item",
+//                            "itemName",
+//                            item.getItemName(),
+//                            false,
+//                            new String[]{"required.item.itemName"},
+//                            null,
+//                            null));
+        }
+        if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+            bindingResult.rejectValue("price", "range", new Object[]{1000, 1000000}, null);
+        }
+        if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+            bindingResult.rejectValue("quantity", "max", new Object[]{9999}, null);
+        }
+
+        // 특정 필드가 아닌 복합 룰 검증
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if (resultPrice < 10000) {
+                bindingResult.reject("totalPriceMin", new Object[]{10000, resultPrice}, null);
             }
         }
         // 검증에 실패하면 다시 입력 폼으로
