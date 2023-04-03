@@ -26,6 +26,7 @@
 
         <div>
             <label for="itemName">상품명</label>
+            <!-- th:field가 좋은게 에러가 없으면 그냥 모델의 필드값을 뿌려주고, 에러가 있으면 BindingResult의 에러 필드값을 찍어준다. -->
             <input type="text" id="itemName" th:field="*{itemName}"
                    th:errorclass="field-error"
                    class="form-control"
@@ -40,7 +41,7 @@
                    th:errorclass="field-error"
                    class="form-control"
                    placeholder="가격을 입력하세요">
-            <div class="field-error" th:errors="*{itemName}">
+            <div class="field-error" th:errors="*{price}">
                 <p>상품명 에러 메시지</p>
             </div>
         </div>
@@ -50,7 +51,7 @@
                    th:errorclass="field-error"
                    class="form-control"
                    placeholder="수량을 입력하세요">
-            <div class="field-error" th:errors="*{itemName}">
+            <div class="field-error" th:errors="*{quantity}">
                 <p>상품명 에러 메시지</p>
             </div>
         </div>

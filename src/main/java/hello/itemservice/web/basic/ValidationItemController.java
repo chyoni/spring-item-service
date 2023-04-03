@@ -34,7 +34,7 @@ public class ValidationItemController {
     @GetMapping("/{itemId}")
     public String item(@PathVariable long itemId, Model model) {
         Item item = itemRepository.findById(itemId);
-        model.addAttribute("item",item);
+        model.addAttribute("item", item);
         return "validation/item";
     }
 
@@ -76,7 +76,9 @@ public class ValidationItemController {
     }
 
     // ! BindingResult는 무조건 ModelAttribute 다음에 파라미터로 받아야한다.
-    @PostMapping("/add")
+    // ! BindingResult는 어떤 에러가 있으면, 사용하고 있는 모델의 정보를 받고 그 모델의 필드를 받아서 에러 메시지를 담아준다.
+    // ! BindingResult는 타입을 잘못 입력해서 넣어도 (int값을 String으로 넣는것과 같은) 그것을 에러로 처리해준다.
+    //@PostMapping("/add")
     public String saveV3(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
         if (!StringUtils.hasText(item.getItemName())) {
@@ -93,11 +95,53 @@ public class ValidationItemController {
         if (item.getPrice() != null && item.getQuantity() != null) {
             int resultPrice = item.getPrice() * item.getQuantity();
             if (resultPrice < 10000) {
+                // ! 툭정 필드가 아니라 이렇게 글로벌한 에러인 경우 ObjectError로 담으면 된다.
                 bindingResult.addError(new ObjectError("item", "가격 * 수량은 10,000원 이상이어야 합니다. 현재 값 = " + resultPrice));
             }
         }
         // 검증에 실패하면 다시 입력 폼으로
-        if(bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors()) {
+            return "validation/addForm";
+        }
+
+        Item savedItem = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        // {}로 데이터를 넣은게 아니라면 queryParameter로 나머지 attribute가 들어간다.
+        // ex) localhost:8080/validation/items/3?status=true
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/validation/items/{itemId}";
+    }
+
+    @PostMapping("/add")
+    public String saveV4(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+
+        if (!StringUtils.hasText(item.getItemName())) {
+            bindingResult.addError(new FieldError("item", "itemName", item.getItemName(), false, null, null, "상품 이름은 필수입니다."));
+        }
+        if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+            bindingResult.addError(
+                    new FieldError(
+                            "item",
+                            "price",
+                            item.getPrice(),
+                            false,
+                            null, null,
+                            "가격은 1,000 ~ 1,000,000까지 허용합니다."));
+        }
+        if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+            bindingResult.addError(new FieldError("item", "quantity", item.getQuantity(), false, null, null, "수량은 최대 9,999까지 허용합니다."));
+        }
+
+        // 특정 필드가 아닌 복합 룰 검증
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if (resultPrice < 10000) {
+                // ! 툭정 필드가 아니라 이렇게 글로벌한 에러인 경우 ObjectError로 담으면 된다.
+                bindingResult.addError(new ObjectError("item", null, null, "가격 * 수량은 10,000원 이상이어야 합니다. 현재 값 = " + resultPrice));
+            }
+        }
+        // 검증에 실패하면 다시 입력 폼으로
+        if (bindingResult.hasErrors()) {
             return "validation/addForm";
         }
 
@@ -110,7 +154,7 @@ public class ValidationItemController {
     }
 
     //@PostMapping("/add")
-    public String saveV4(Item item) {
+    public String saveV456(Item item) {
         itemRepository.save(item);
         return "validation/item";
     }
