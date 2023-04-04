@@ -11,6 +11,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -26,6 +28,14 @@ public class ValidationItemController {
 
     private final ItemRepository itemRepository;
     private final ItemValidator itemValidator;
+
+    // ! Spring이 제공하는 Validator 인터페이스를 사용해서 만든 Validator를 적용하는 방식은
+    // ! 이렇게 특정 컨트롤러에서 InitBinder를 만들어주면 된다. 그럼 이 컨트롤러 안에서는 어떤 Mapping이 호출되든 이 녀석이 먼저 실행되서
+    // ! validate할 준비를 한다.
+    @InitBinder
+    public void init(WebDataBinder dataBinder) {
+        dataBinder.addValidators(itemValidator);
+    }
 
     @GetMapping
     public String items(Model model) {
@@ -278,10 +288,30 @@ public class ValidationItemController {
         return "redirect:/validation/items/{itemId}";
     }
 
-    @PostMapping("/add")
+    //@PostMapping("/add")
     public String saveV7(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
         itemValidator.validate(item, bindingResult);
+
+        // 검증에 실패하면 다시 입력 폼으로
+        if (bindingResult.hasErrors()) {
+            log.info("errors ={}", bindingResult);
+            return "validation/addForm";
+        }
+
+        Item savedItem = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        // {}로 데이터를 넣은게 아니라면 queryParameter로 나머지 attribute가 들어간다.
+        // ex) localhost:8080/validation/items/3?status=true
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/validation/items/{itemId}";
+    }
+
+    @PostMapping("/add")
+    public String saveV8(@Validated @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+        // ! 이렇게 @Validated를 파라미터로 받고 그 다음에 검증할 오브젝트를 받으면,
+        // ! 바인딩한 밸리데이터가 여러개 있을 땐 support를 통해서 현재 이 오브젝트를 처리할 수 있는 밸리데이터가 누구인지 찾고
+        // ! 찾으면 그 밸리데이터의 validate을 호출한다.
 
         // 검증에 실패하면 다시 입력 폼으로
         if (bindingResult.hasErrors()) {
