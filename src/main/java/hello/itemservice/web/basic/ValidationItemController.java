@@ -25,6 +25,7 @@ import java.util.Map;
 public class ValidationItemController {
 
     private final ItemRepository itemRepository;
+    private final ItemValidator itemValidator;
 
     @GetMapping
     public String items(Model model) {
@@ -231,7 +232,7 @@ public class ValidationItemController {
         return "redirect:/validation/items/{itemId}";
     }
 
-    @PostMapping("/add")
+    //@PostMapping("/add")
     public String saveV6(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
         // ! BindingResult는, 자기보다 바로 앞에 어떤 녀석을 검증할건지를 반드시 강제하기 때문에 사실 BindingResult는 이미 본인이 누굴 검증할지 알고 있는 상태다.
@@ -263,6 +264,25 @@ public class ValidationItemController {
                 bindingResult.reject("totalPriceMin", new Object[]{10000, resultPrice}, null);
             }
         }
+        // 검증에 실패하면 다시 입력 폼으로
+        if (bindingResult.hasErrors()) {
+            log.info("errors ={}", bindingResult);
+            return "validation/addForm";
+        }
+
+        Item savedItem = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        // {}로 데이터를 넣은게 아니라면 queryParameter로 나머지 attribute가 들어간다.
+        // ex) localhost:8080/validation/items/3?status=true
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/validation/items/{itemId}";
+    }
+
+    @PostMapping("/add")
+    public String saveV7(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+
+        itemValidator.validate(item, bindingResult);
+
         // 검증에 실패하면 다시 입력 폼으로
         if (bindingResult.hasErrors()) {
             log.info("errors ={}", bindingResult);
