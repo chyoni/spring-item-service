@@ -16,9 +16,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Controller
@@ -307,7 +305,7 @@ public class ValidationItemController {
         return "redirect:/validation/items/{itemId}";
     }
 
-    @PostMapping("/add")
+    //@PostMapping("/add")
     public String saveV8(@Validated @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         // ! 이렇게 @Validated를 파라미터로 받고 그 다음에 검증할 오브젝트를 받으면,
         // ! 바인딩한 밸리데이터가 여러개 있을 땐 support를 통해서 현재 이 오브젝트를 처리할 수 있는 밸리데이터가 누구인지 찾고
