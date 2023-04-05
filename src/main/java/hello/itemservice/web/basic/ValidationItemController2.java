@@ -52,6 +52,14 @@ public class ValidationItemController2 {
         // ! 그리고 결국 그 Bean Validation도 이전에 배운 BindingResult를 내부적으로 사용해서 에러 코드를 생성하고
         // ! 그 코드가 있으면 우선순위가 높은 순으로 에러 메시지를 FieldError에 담는 방식으로 구현된다.
 
+        // ! 근데 ObjectError는 Bean Validation으로 처리하기는 좀 애매하기 때문에 이렇게 그냥 자바 코드로 처리하는게 제일 깔끔하다.
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if (resultPrice < 10000) {
+                bindingResult.reject("totalPriceMin", new Object[]{10000, resultPrice}, null);
+            }
+        }
+
         // 검증에 실패하면 다시 입력 폼으로
         if (bindingResult.hasErrors()) {
             log.info("errors ={}", bindingResult);

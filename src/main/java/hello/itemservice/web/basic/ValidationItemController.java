@@ -310,7 +310,6 @@ public class ValidationItemController {
         // ! 이렇게 @Validated를 파라미터로 받고 그 다음에 검증할 오브젝트를 받으면,
         // ! 바인딩한 밸리데이터가 여러개 있을 땐 support를 통해서 현재 이 오브젝트를 처리할 수 있는 밸리데이터가 누구인지 찾고
         // ! 찾으면 그 밸리데이터의 validate을 호출한다.
-
         // 검증에 실패하면 다시 입력 폼으로
         if (bindingResult.hasErrors()) {
             log.info("errors ={}", bindingResult);
@@ -346,8 +345,9 @@ public class ValidationItemController {
     }
 
 
-    @PostConstruct
+    //@PostConstruct
     public void init() {
+        log.info("is reach?");
         itemRepository.save(new Item("item1", 100, 10));
         itemRepository.save(new Item("item2", 2000, 45));
     }
